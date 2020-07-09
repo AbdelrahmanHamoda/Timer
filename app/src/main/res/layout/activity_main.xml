@@ -6,20 +6,20 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <EditText
-        android:id="@+id/time"
+    <TextView
+        android:id="@+id/timer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="75dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="75dp"
-        android:ems="10"
-        android:inputType="time"
+        android:textAlignment="center"
+        android:text="00:00:00"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:importantForAutofill="no"
-        tools:ignore="LabelFor" />
+        tools:ignore="HardcodedText,LabelFor" />
 
     <EditText
         android:id="@+id/hour"
@@ -27,12 +27,11 @@
         android:layout_height="40dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="42dp"
-        android:ems="10"
         android:hint="@string/hours"
         android:inputType="number"
         android:textAlignment="center"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/time"
+        app:layout_constraintTop_toBottomOf="@+id/timer"
         tools:ignore="Autofill" />
 
     <EditText
@@ -43,14 +42,13 @@
         android:layout_marginTop="42dp"
         android:layout_marginEnd="33dp"
         android:layout_marginBottom="40dp"
-        android:ems="10"
         android:hint="@string/minuets"
         android:inputType="number"
         android:textAlignment="center"
         app:layout_constraintBottom_toTopOf="@+id/start"
         app:layout_constraintEnd_toStartOf="@+id/sec"
         app:layout_constraintStart_toEndOf="@+id/hour"
-        app:layout_constraintTop_toBottomOf="@+id/time"
+        app:layout_constraintTop_toBottomOf="@+id/timer"
         tools:ignore="Autofill" />
 
     <EditText
@@ -59,21 +57,21 @@
         android:layout_height="40dp"
         android:layout_marginTop="42dp"
         android:layout_marginEnd="16dp"
-        android:ems="10"
         android:hint="@string/seconds"
         android:textAlignment="center"
         android:inputType="number"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/time"
+        app:layout_constraintTop_toBottomOf="@+id/timer"
         tools:ignore="Autofill" />
 
     <Button
-        android:id="@+id/stop"
+        android:id="@+id/pause"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
         android:layout_marginEnd="16dp"
-        android:text="@string/stop"
+        android:text="@string/pause"
+        android:enabled="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sec" />
 
@@ -84,6 +82,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="40dp"
         android:text="@string/reset"
+        android:enabled="false"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/hour" />
 
@@ -95,7 +94,7 @@
         android:layout_marginTop="40dp"
         android:layout_marginEnd="32dp"
         android:text="@string/start"
-        app:layout_constraintEnd_toStartOf="@+id/stop"
+        app:layout_constraintEnd_toStartOf="@+id/pause"
         app:layout_constraintStart_toEndOf="@+id/reset"
         app:layout_constraintTop_toBottomOf="@+id/min" />
 
