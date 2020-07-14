@@ -6,4 +6,5 @@
     <string name="seconds">Seconds</string>
     <string name="minuets">Minuets</string>
     <string name="hours">Hours</string>
+    <string name="resume">resume</string>
 </resources>

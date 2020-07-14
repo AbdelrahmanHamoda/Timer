@@ -2,8 +2,10 @@ package com.example.timer;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,10 +15,10 @@ import android.widget.Toast;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-    private static long intialValue; // in milliseconds
-    private long remainingTime;
+    private long remainingTime=0;
+    private long endTime;
     private CountDownTimer cdTimer;
-    private boolean state = false;
+    private boolean state;
 
     private Button start;
     private Button pause;
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText hours;
     private EditText minuets;
     private EditText seconds;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,23 +36,158 @@ public class MainActivity extends AppCompatActivity {
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                start();
+                start_timer();
             }
         });
         pause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(state){
-                    pause();
-                }
+                pause();
             }
         });
+
         reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 reset();
             }
         });
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // bunch of code to save data of running timer even if app is closed
+        SharedPreferences pref = getSharedPreferences("prefs",MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putLong("rem",remainingTime);
+        editor.putLong("end",endTime);
+        editor.putBoolean("state",state);
+        editor.apply();
+
+        if(cdTimer!=null){
+            cdTimer.cancel();
+            cdTimer=null;
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        hours.setEnabled(true);
+        minuets.setEnabled(true);
+        seconds.setEnabled(true);
+
+        SharedPreferences pref = getSharedPreferences("prefs", MODE_PRIVATE);
+        remainingTime = pref.getLong("rem",0);
+        endTime = pref.getLong("end",0);
+        state = pref.getBoolean("state",false);
+
+        Log.v("state", String.valueOf(state));
+        Log.v("remaining from on start",String.valueOf(remainingTime));
+
+        if(state){
+            // test if timer is able to continue in background or not
+            remainingTime = endTime - System.currentTimeMillis();
+            if(remainingTime<0){
+                state=false;
+                remainingTime = 0;
+                displayTimer();
+                start.setText(R.string.start);
+                start.setEnabled(true);
+                pause.setEnabled(false);
+                reset.setEnabled(false);
+                hours.setEnabled(false);
+                minuets.setEnabled(false);
+                seconds.setEnabled(false);
+                hours.setText("");
+                minuets.setText("");
+                seconds.setText("");
+                if(cdTimer!=null){
+                    cdTimer.cancel();
+                    cdTimer=null;
+                }
+            }else {
+                start_timer();
+            }
+        }
+    }
+
+    public void start_timer(){
+        Log.v("start", String.valueOf(remainingTime));
+        if(remainingTime==0){ // it didn't come from another timer
+            remainingTime = translateToMilli(); // getting input from user and storing it in remainingTime
+            Log.v("user input","taking user input");
+        }
+        // testing user input
+        if(remainingTime<1000){
+            Toast.makeText(this,"at least one field mustn't be empty",Toast.LENGTH_SHORT).show();
+            Log.v("remaining", String.valueOf(remainingTime));
+        }else{
+            state=true;
+            pause.setEnabled(true);
+            start.setEnabled(false);
+            start.setText(R.string.resume);
+            reset.setEnabled(false);
+            hours.setEnabled(false);
+            minuets.setEnabled(false);
+            seconds.setEnabled(false);
+            hours.setText("");
+            minuets.setText("");
+            seconds.setText("");
+            endTime = System.currentTimeMillis() + remainingTime; // detecting value of end time according to the system
+            // initializing timer
+            cdTimer = new CountDownTimer(remainingTime,1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    remainingTime = millisUntilFinished;
+                    displayTimer();
+                }
+
+                @Override
+                public void onFinish() {
+                    state=false;
+                    remainingTime=0;
+                    pause.setEnabled(false);
+                    start.setEnabled(true);
+                    start.setText(R.string.start);
+                    reset.setEnabled(false);
+                    hours.setEnabled(true);
+                    minuets.setEnabled(true);
+                    seconds.setEnabled(true);
+                }
+            }.start();
+        }
+    }
+
+    public void pause(){
+        state=false;
+        cdTimer.cancel();
+        cdTimer=null;
+        pause.setEnabled(false);
+        start.setEnabled(true);
+        reset.setEnabled(true);
+    }
+
+    public void reset(){
+        if(cdTimer!=null){
+            cdTimer.cancel();
+            cdTimer=null;
+        }
+        timer.setText("00:00:00");
+        state = false;
+        remainingTime = 0;
+        reset.setEnabled(false);
+        pause.setEnabled(false);
+        start.setEnabled(true);
+        start.setText(R.string.start);
+        hours.setEnabled(true);
+        minuets.setEnabled(true);
+        seconds.setEnabled(true);
+        hours.setText("");
+        minuets.setText("");
+        seconds.setText("");
     }
 
     public void setupUI(){
@@ -60,57 +198,6 @@ public class MainActivity extends AppCompatActivity {
         hours=findViewById(R.id.hour);
         minuets=findViewById(R.id.min);
         seconds=findViewById(R.id.sec);
-    }
-
-    private void start(){
-        remainingTime=translateToMilli();
-        if(remainingTime==0){
-            Toast.makeText(this,"at least one value should be set",Toast.LENGTH_SHORT).show();
-        }else{
-            cdTimer = new CountDownTimer(remainingTime,1000) {
-                @Override
-                public void onTick(long millisUntilFinished) {
-                    remainingTime=millisUntilFinished;
-                    displayTimer();
-                }
-
-                @Override
-                public void onFinish() {
-                    state=false;
-                    start.setEnabled(true);
-                    pause.setEnabled(false);
-                    reset.setEnabled(false);
-                    hours.setText("");
-                    minuets.setText("");
-                    seconds.setText("");
-
-                }
-            }.start();
-            state=true;
-            start.setEnabled(false);
-            pause.setEnabled(true);
-            reset.setEnabled(false);
-        }
-    }
-
-    private void pause(){
-        //remainingTime =
-        cdTimer.cancel();
-        state=false;
-        start.setEnabled(true);
-        pause.setEnabled(false);
-        reset.setEnabled(true);
-    }
-
-    private void reset(){
-        remainingTime=0;
-        displayTimer();
-        hours.setText("");
-        minuets.setText("");
-        seconds.setText("");
-        start.setEnabled(true);
-        pause.setEnabled(false);
-        reset.setEnabled(false);
     }
 
     private long translateToMilli(){
