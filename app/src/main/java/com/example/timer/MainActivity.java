@@ -7,7 +7,9 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,14 +21,18 @@ public class MainActivity extends AppCompatActivity {
     private long endTime;
     private CountDownTimer cdTimer;
     private boolean state;
+    private int frag = 100;
 
     private Button start;
     private Button pause;
     private Button reset;
     private TextView timer;
+    private TextView fragments;
     private EditText hours;
     private EditText minuets;
     private EditText seconds;
+    private CheckBox alwaysOn;
+    private CheckBox high_perception;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +51,30 @@ public class MainActivity extends AppCompatActivity {
                 pause();
             }
         });
-
         reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 reset();
+            }
+        });
+        alwaysOn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(alwaysOn.isChecked()){
+                    // preventing screen from going off
+                    Toast.makeText(getApplicationContext(),"toggled to always on mode",Toast.LENGTH_SHORT).show();
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }else{
+                    // turning screen back to its normal mode
+                    Toast.makeText(getApplicationContext(),"toggled to normal mode",Toast.LENGTH_SHORT).show();
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }
+            }
+        });
+        high_perception.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
     }
@@ -61,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences pref = getSharedPreferences("prefs",MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         editor.putLong("rem",remainingTime);
+        editor.putInt("frag",frag);
         editor.putLong("end",endTime);
         editor.putBoolean("state",state);
         editor.apply();
@@ -78,9 +104,10 @@ public class MainActivity extends AppCompatActivity {
         hours.setEnabled(true);
         minuets.setEnabled(true);
         seconds.setEnabled(true);
-
+        // retrieving saved data
         SharedPreferences pref = getSharedPreferences("prefs", MODE_PRIVATE);
         remainingTime = pref.getLong("rem",0);
+        frag = pref.getInt("frag",0);
         endTime = pref.getLong("end",0);
         state = pref.getBoolean("state",false);
 
@@ -93,7 +120,8 @@ public class MainActivity extends AppCompatActivity {
             if(remainingTime<0){
                 state=false;
                 remainingTime = 0;
-                displayTimer();
+                frag=0;
+                displayTimer(frag);
                 start.setText(R.string.start);
                 start.setEnabled(true);
                 pause.setEnabled(false);
@@ -110,6 +138,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }else {
                 start_timer();
+            }
+        }else{
+            displayTimer(frag);
+            if(!timer.getText().toString().equals("00:00:00")){
+                start.setText(R.string.resume);
+            }else{
+                start.setText(R.string.start);
             }
         }
     }
@@ -138,17 +173,24 @@ public class MainActivity extends AppCompatActivity {
             seconds.setText("");
             endTime = System.currentTimeMillis() + remainingTime; // detecting value of end time according to the system
             // initializing timer
-            cdTimer = new CountDownTimer(remainingTime,1000) {
+            cdTimer = new CountDownTimer(remainingTime,1) {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     remainingTime = millisUntilFinished;
-                    displayTimer();
+                    frag = (int) (remainingTime/10);
+                    frag=getFrag(frag);
+                    displayTimer(frag);
+
+                    if(remainingTime%1000!=0){
+                        Log.v(String.valueOf(remainingTime/1000),String.valueOf(frag));
+                    }
                 }
 
                 @Override
                 public void onFinish() {
                     state=false;
                     remainingTime=0;
+                    frag=100;
                     pause.setEnabled(false);
                     start.setEnabled(true);
                     start.setText(R.string.start);
@@ -178,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
         timer.setText("00:00:00");
         state = false;
         remainingTime = 0;
+        frag=100;
         reset.setEnabled(false);
         pause.setEnabled(false);
         start.setEnabled(true);
@@ -195,9 +238,12 @@ public class MainActivity extends AppCompatActivity {
         pause=findViewById(R.id.pause);
         reset=findViewById(R.id.reset);
         timer=findViewById(R.id.timer);
+        fragments=findViewById(R.id.fragment);
         hours=findViewById(R.id.hour);
         minuets=findViewById(R.id.min);
         seconds=findViewById(R.id.sec);
+        alwaysOn=findViewById(R.id.always_on);
+        high_perception=findViewById(R.id.high_perception);
     }
 
     private long translateToMilli(){
@@ -227,8 +273,11 @@ public class MainActivity extends AppCompatActivity {
         return total;
     }
 
-    private void displayTimer(){
+    private void displayTimer(int frag){
+        String timeFormat;
+
         int hours = (int) remainingTime/1000/60/60;
+
         int minutes;
         if(hours>0){
             minutes = (int) remainingTime/1000/60 - hours*60;
@@ -237,7 +286,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         int sec = (int) remainingTime/1000%60;
-        String timeFormat = String.format(Locale.getDefault(),"%02d:%02d:%02d",hours,minutes,sec);
+
+        fragments.setText(String.valueOf(frag));
+
+        timeFormat = String.format(Locale.getDefault(),"%02d:%02d:%02d",hours,minutes,sec);
+
         timer.setText(timeFormat);
+    }
+
+    private int getFrag(int num) {
+        int result = 0;
+        String temp = String.valueOf(num);
+        if (num > 100) {
+            temp = temp.substring(temp.length() - 2);
+            //System.out.println(temp);
+            result = Integer.parseInt(temp);
+        }
+        return result;
     }
 }

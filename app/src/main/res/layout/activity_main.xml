@@ -22,6 +22,18 @@
         android:importantForAutofill="no"
         tools:ignore="HardcodedText,LabelFor" />
 
+    <TextView
+        android:id="@+id/fragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="63dp"
+        android:layout_marginEnd="112dp"
+        android:text="000"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="HardcodedText" />
+
     <EditText
         android:id="@+id/hour"
         android:layout_width="wrap_content"
@@ -98,5 +110,25 @@
         app:layout_constraintEnd_toStartOf="@id/pause"
         app:layout_constraintStart_toEndOf="@id/reset"
         app:layout_constraintTop_toBottomOf="@id/min" />
+
+    <CheckBox
+        android:id="@+id/always_on"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="102dp"
+        android:layout_marginEnd="157dp"
+        android:text="@string/always_on"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/start" />
+
+    <CheckBox
+        android:id="@+id/high_perception"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="124dp"
+        android:layout_marginBottom="176dp"
+        android:text="@string/high_perception"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
