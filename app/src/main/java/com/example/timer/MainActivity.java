@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private long endTime;
     private CountDownTimer cdTimer;
     private boolean state;
-    private int frag = 100;
+    private int frag;
 
     private Button start;
     private Button pause;
@@ -74,7 +74,11 @@ public class MainActivity extends AppCompatActivity {
         high_perception.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                if(high_perception.isChecked()){
+                    fragments.setVisibility(View.VISIBLE);
+                }else{
+                    fragments.setVisibility(View.INVISIBLE);
+                }
             }
         });
     }
@@ -100,10 +104,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-
-        hours.setEnabled(true);
-        minuets.setEnabled(true);
-        seconds.setEnabled(true);
         // retrieving saved data
         SharedPreferences pref = getSharedPreferences("prefs", MODE_PRIVATE);
         remainingTime = pref.getLong("rem",0);
@@ -111,8 +111,8 @@ public class MainActivity extends AppCompatActivity {
         endTime = pref.getLong("end",0);
         state = pref.getBoolean("state",false);
 
-        Log.v("state", String.valueOf(state));
-        Log.v("remaining from on start",String.valueOf(remainingTime));
+        /*Log.v("state", String.valueOf(state));
+        Log.v("remaining from on start",String.valueOf(remainingTime));*/
 
         if(state){
             // test if timer is able to continue in background or not
@@ -120,8 +120,8 @@ public class MainActivity extends AppCompatActivity {
             if(remainingTime<0){
                 state=false;
                 remainingTime = 0;
-                frag=0;
                 displayTimer(frag);
+                frag=0;
                 start.setText(R.string.start);
                 start.setEnabled(true);
                 pause.setEnabled(false);
@@ -143,6 +143,10 @@ public class MainActivity extends AppCompatActivity {
             displayTimer(frag);
             if(!timer.getText().toString().equals("00:00:00")){
                 start.setText(R.string.resume);
+                reset.setEnabled(true);
+                hours.setEnabled(false);
+                minuets.setEnabled(false);
+                seconds.setEnabled(false);
             }else{
                 start.setText(R.string.start);
             }
@@ -150,15 +154,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void start_timer(){
-        Log.v("start", String.valueOf(remainingTime));
+        //Log.v("start", String.valueOf(remainingTime));
         if(remainingTime==0){ // it didn't come from another timer
             remainingTime = translateToMilli(); // getting input from user and storing it in remainingTime
-            Log.v("user input","taking user input");
+            //Log.v("user input","taking user input");
         }
         // testing user input
         if(remainingTime<1000){
             Toast.makeText(this,"at least one field mustn't be empty",Toast.LENGTH_SHORT).show();
-            Log.v("remaining", String.valueOf(remainingTime));
+            //Log.v("remaining", String.valueOf(remainingTime));
         }else{
             state=true;
             pause.setEnabled(true);
@@ -181,16 +185,16 @@ public class MainActivity extends AppCompatActivity {
                     frag=getFrag(frag);
                     displayTimer(frag);
 
-                    if(remainingTime%1000!=0){
+                    /*if(remainingTime%1000!=0){
                         Log.v(String.valueOf(remainingTime/1000),String.valueOf(frag));
-                    }
+                    }*/
                 }
 
                 @Override
                 public void onFinish() {
                     state=false;
                     remainingTime=0;
-                    frag=100;
+                    frag=0;
                     pause.setEnabled(false);
                     start.setEnabled(true);
                     start.setText(R.string.start);
@@ -218,9 +222,10 @@ public class MainActivity extends AppCompatActivity {
             cdTimer=null;
         }
         timer.setText("00:00:00");
+        fragments.setText("00");
         state = false;
         remainingTime = 0;
-        frag=100;
+        frag=0;
         reset.setEnabled(false);
         pause.setEnabled(false);
         start.setEnabled(true);
@@ -246,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
         high_perception=findViewById(R.id.high_perception);
     }
 
+    // helper methods
     private long translateToMilli(){
         int hour;
         int minutes;
@@ -295,6 +301,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int getFrag(int num) {
+        // method to cut out frag to count from 100 to 0
         int result = 0;
         String temp = String.valueOf(num);
         if (num > 100) {

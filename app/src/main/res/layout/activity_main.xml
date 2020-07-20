@@ -28,10 +28,12 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="63dp"
         android:layout_marginEnd="112dp"
-        android:text="000"
+        android:text="00"
         android:textSize="15sp"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible"
         tools:ignore="HardcodedText" />
 
     <EditText
