@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -21,6 +20,8 @@ public class MainActivity extends AppCompatActivity {
     private long endTime;
     private CountDownTimer cdTimer;
     private boolean state;
+    private boolean trigger=true;
+    private CountDownTimer warning_timer;
     private int frag;
 
     private Button start;
@@ -81,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
     }
 
     @Override
@@ -93,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putInt("frag",frag);
         editor.putLong("end",endTime);
         editor.putBoolean("state",state);
+        editor.putBoolean("trig",trigger);
         editor.apply();
 
         if(cdTimer!=null){
@@ -110,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         frag = pref.getInt("frag",0);
         endTime = pref.getLong("end",0);
         state = pref.getBoolean("state",false);
-
+        trigger=pref.getBoolean("trig",true);
         /*Log.v("state", String.valueOf(state));
         Log.v("remaining from on start",String.valueOf(remainingTime));*/
 
@@ -118,10 +121,11 @@ public class MainActivity extends AppCompatActivity {
             // test if timer is able to continue in background or not
             remainingTime = endTime - System.currentTimeMillis();
             if(remainingTime<0){
+                trigger=true;
                 state=false;
                 remainingTime = 0;
-                displayTimer(frag);
                 frag=0;
+                displayTimer(frag);
                 start.setText(R.string.start);
                 start.setEnabled(true);
                 pause.setEnabled(false);
@@ -129,6 +133,9 @@ public class MainActivity extends AppCompatActivity {
                 hours.setEnabled(false);
                 minuets.setEnabled(false);
                 seconds.setEnabled(false);
+                hours.setEnabled(true);
+                minuets.setEnabled(true);
+                seconds.setEnabled(true);
                 hours.setText("");
                 minuets.setText("");
                 seconds.setText("");
@@ -137,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
                     cdTimer=null;
                 }
             }else {
+                warning_start(12000-remainingTime);
                 start_timer();
             }
         }else{
@@ -183,6 +191,12 @@ public class MainActivity extends AppCompatActivity {
                     remainingTime = millisUntilFinished;
                     frag = (int) (remainingTime/10);
                     frag=getFrag(frag);
+                    if(remainingTime<=11000){
+                        if(trigger){
+                            trigger=false;
+                            warning_start(0);
+                        }
+                    }
                     displayTimer(frag);
 
                     /*if(remainingTime%1000!=0){
@@ -192,9 +206,13 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onFinish() {
+                    trigger=true;
+                    warning_timer.cancel();
                     state=false;
                     remainingTime=0;
                     frag=0;
+                    /*fragments.setTextColor(getResources().getColor(R.color.black));
+                    timer.setTextColor(getResources().getColor(R.color.black));*/
                     pause.setEnabled(false);
                     start.setEnabled(true);
                     start.setText(R.string.start);
@@ -244,11 +262,15 @@ public class MainActivity extends AppCompatActivity {
         reset=findViewById(R.id.reset);
         timer=findViewById(R.id.timer);
         fragments=findViewById(R.id.fragment);
+        alwaysOn=findViewById(R.id.always_on);
+        high_perception=findViewById(R.id.high_perception);
         hours=findViewById(R.id.hour);
         minuets=findViewById(R.id.min);
         seconds=findViewById(R.id.sec);
-        alwaysOn=findViewById(R.id.always_on);
-        high_perception=findViewById(R.id.high_perception);
+        // to make password always shown
+        hours.setTransformationMethod(null);
+        minuets.setTransformationMethod(null);
+        seconds.setTransformationMethod(null);
     }
 
     // helper methods
@@ -310,5 +332,37 @@ public class MainActivity extends AppCompatActivity {
             result = Integer.parseInt(temp);
         }
         return result;
+    }
+
+    private void warning_start(long diff){
+        if (diff == 0) {
+            diff=9800;
+        }
+        warning_timer = new CountDownTimer(diff,250) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                warning();
+            }
+
+            @Override
+            public void onFinish() {
+                fragments.setTextColor(getResources().getColor(R.color.black));
+                timer.setTextColor(getResources().getColor(R.color.black));
+            }
+        }.start();
+    }
+
+    private void warning(){
+           if(timer.getCurrentTextColor()==getResources().getColor(R.color.colorPrimaryDark) ||
+                   timer.getCurrentTextColor()==getResources().getColor(R.color.black)){
+               timer.setTextColor(getResources().getColor(R.color.warning));
+               fragments.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+           }else{
+               timer.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+               fragments.setTextColor(getResources().getColor(R.color.warning));
+           }
+
+
+
     }
 }
