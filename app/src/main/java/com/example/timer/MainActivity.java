@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -143,12 +144,19 @@ public class MainActivity extends AppCompatActivity {
                     cdTimer.cancel();
                     cdTimer=null;
                 }
+                if(warning_timer!=null){
+                    warning_timer.cancel();
+                }
             }else {
                 warning_start(12000-remainingTime);
                 start_timer();
             }
         }else{
             displayTimer(frag);
+            trigger=true;
+            if(warning_timer!=null){
+                warning_timer.cancel();
+            }
             if(!timer.getText().toString().equals("00:00:00")){
                 start.setText(R.string.resume);
                 reset.setEnabled(true);
@@ -207,7 +215,6 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onFinish() {
                     trigger=true;
-                    warning_timer.cancel();
                     state=false;
                     remainingTime=0;
                     frag=0;
@@ -220,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
                     hours.setEnabled(true);
                     minuets.setEnabled(true);
                     seconds.setEnabled(true);
+                    //warning_timer.cancel();
                 }
             }.start();
         }
@@ -229,6 +237,10 @@ public class MainActivity extends AppCompatActivity {
         state=false;
         cdTimer.cancel();
         cdTimer=null;
+        if(warning_timer!=null){
+            warning_timer.cancel();
+            trigger=true;
+        }
         pause.setEnabled(false);
         start.setEnabled(true);
         reset.setEnabled(true);
@@ -239,9 +251,12 @@ public class MainActivity extends AppCompatActivity {
             cdTimer.cancel();
             cdTimer=null;
         }
+        fragments.setTextColor(getResources().getColor(R.color.black));
+        timer.setTextColor(getResources().getColor(R.color.black));
         timer.setText("00:00:00");
         fragments.setText("00");
         state = false;
+        trigger=true;
         remainingTime = 0;
         frag=0;
         reset.setEnabled(false);
@@ -341,13 +356,21 @@ public class MainActivity extends AppCompatActivity {
         warning_timer = new CountDownTimer(diff,250) {
             @Override
             public void onTick(long millisUntilFinished) {
-                warning();
+                if(remainingTime==0){
+                    warning_timer.cancel();
+                    reset();
+                }else{
+                    warning();
+                }
+                Log.v("warning on tic",String.valueOf(remainingTime));
             }
 
             @Override
             public void onFinish() {
                 fragments.setTextColor(getResources().getColor(R.color.black));
                 timer.setTextColor(getResources().getColor(R.color.black));
+                Log.v("warning finished","warning");
+                warning_timer.cancel();
             }
         }.start();
     }
